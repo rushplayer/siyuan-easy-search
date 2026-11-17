@@ -1,0 +1,17 @@
+{
+  "name": "siyuan-easy-search",
+  "version": "0.1.11",
+  "private": true,
+  "description": "全局搜索命中定位与 VS Code 式篇内查找",
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "test": "node --test tests/*.test.cjs",
+    "check": "node --check src/index.js && node --check src/core.js && node --check src/find.js && node --check src/search.js && node --check src/result.js && node --check src/takeover.js",
+    "package": "npm run build && python3 scripts/package.py",
+    "test:platforms": "node scripts/check-platforms.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0",
+    "playwright-core": "^1.65.1"
+  }
+}

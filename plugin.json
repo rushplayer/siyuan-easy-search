@@ -1,0 +1,35 @@
+{
+  "name": "siyuan-easy-search",
+  "author": "rushplayer",
+  "url": "https://github.com/rushplayer/siyuan-easy-search",
+  "version": "0.1.11",
+  "minAppVersion": "3.8.9",
+  "backends": [
+    "windows",
+    "linux",
+    "darwin",
+    "docker",
+    "android",
+    "ios",
+    "harmony"
+  ],
+  "frontends": [
+    "desktop",
+    "desktop-window",
+    "mobile",
+    "browser-desktop",
+    "browser-mobile"
+  ],
+  "displayName": {
+    "default": "顺手搜索",
+    "en": "Easy Search"
+  },
+  "description": {
+    "default": "标题与正文命中快速定位；篇内查找逐处跳转并保留阅读上下文。"
+  },
+  "readme": {
+    "default": "README.md"
+  },
+  "disabledInPublish": true,
+  "keywords": ["搜索", "全局搜索", "篇内查找", "search", "find"]
+}
