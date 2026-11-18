@@ -1,7 +1,7 @@
 新增插件：顺手搜索（Easy Search）
 
 仓库：https://github.com/rushplayer/siyuan-easy-search
-Release：https://github.com/rushplayer/siyuan-easy-search/releases/tag/v0.1.13
+Release：https://github.com/rushplayer/siyuan-easy-search/releases/tag/v0.1.14
 
 **还你一个正常的搜索。标题正文一起搜，结果按篇展示，点中就到原文。**
 
@@ -11,6 +11,7 @@ Release：https://github.com/rushplayer/siyuan-easy-search/releases/tag/v0.1.13
 - 点击命中内容，直接定位并高亮对应文字；搜索窗保留，方便继续查找。
 - 当前笔记使用独立的小查找窗，显示匹配序号，支持上下跳转和首尾循环。
 - 每页 50/100/200 条，记住选择；兼容桌面、手机、网页及 Docker 网页端。
+- 安装包不设置最低思源版本门槛。
 
 启用时接管原生笔记搜索入口，禁用插件后恢复。
 

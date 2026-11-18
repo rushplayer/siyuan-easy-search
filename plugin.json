@@ -2,8 +2,7 @@
   "name": "siyuan-easy-search",
   "author": "rushplayer",
   "url": "https://github.com/rushplayer/siyuan-easy-search",
-  "version": "0.1.13",
-  "minAppVersion": "3.8.9",
+  "version": "0.1.14",
   "backends": [
     "windows",
     "linux",

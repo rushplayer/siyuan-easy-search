@@ -1,6 +1,6 @@
 {
   "name": "siyuan-easy-search",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "private": true,
   "description": "还你一个正常的搜索。标题正文一起搜，结果按篇展示，点中就到原文。",
   "scripts": {
