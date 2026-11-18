@@ -1,6 +1,6 @@
 {
   "name": "siyuan-easy-search",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "private": true,
   "description": "全局搜索命中定位与 VS Code 式篇内查找",
   "scripts": {

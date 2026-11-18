@@ -13,7 +13,7 @@ for (const frontend of frontends) {
     test(`${frontend}: global search, touch find and navigation use supported SDK calls`, async t => {
         const app = await setup(t, {frontend, backend: frontend.startsWith("browser") ? "docker" : "ios"});
         app.topBars.find(item => item.id === "search").callback();
-        assert.ok(app.document.querySelector('[aria-label="搜索笔记和内容"]'));
+        assert.ok(app.document.querySelector('[aria-label="搜索笔记标题和内容"]'));
         assert.equal(app.document.querySelector(".ess-pin"), null);
         assert.equal(app.plugin.dialog.element.classList.contains("ess-mobile-dialog"), mobile);
         await app.breadcrumbs[0].callback({}, {element: app.document.getElementById("second"), block: {rootID: "second"}});

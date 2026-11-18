@@ -2,7 +2,7 @@
   "name": "siyuan-easy-search",
   "author": "rushplayer",
   "url": "https://github.com/rushplayer/siyuan-easy-search",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "minAppVersion": "3.8.9",
   "backends": [
     "windows",
@@ -25,7 +25,7 @@
     "en": "Easy Search"
   },
   "description": {
-    "default": "标题与正文命中快速定位；篇内查找逐处跳转并保留阅读上下文。"
+    "default": "按笔记整理搜索结果，命中内容一键回到原文；篇内逐处查找。"
   },
   "readme": {
     "default": "README.md"

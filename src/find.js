@@ -44,7 +44,7 @@ class FindController {
         this.root.setAttribute("aria-label", "当前笔记查找浮窗");
         this.input = el("input", "b3-text-field ess-find-input");
         this.input.type = "search";
-        this.input.placeholder = "查找";
+        this.input.placeholder = "在这篇笔记里找…";
         this.input.setAttribute("aria-label", "查找当前笔记");
         this.counter = el("span", "ess-find-count", "0 / 0");
         this.previous = el("button", "b3-button b3-button--outline ess-find-button", "↑");

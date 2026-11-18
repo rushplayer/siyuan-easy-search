@@ -86,17 +86,17 @@ test("global results highlight title and body text in a flat paged list, and bod
     view.input.value = "同学";
     await view.load();
     assert.ok(app.document.querySelectorAll(".ess-doc-title mark").length > 0);
-    assert.ok(app.document.querySelectorAll(".ess-block mark").length > 0);
+    assert.ok(app.document.querySelectorAll(".ess-content-result mark").length > 0);
     assert.equal(app.document.querySelector(".ess-group, .ess-group-header, .ess-toggle, .ess-more"), null);
-    assert.equal(app.document.querySelectorAll(".ess-block").length, 1);
-    const row = app.document.querySelector(".ess-block");
+    assert.equal(app.document.querySelectorAll(".ess-content-result").length, 1);
+    const row = app.document.querySelector(".ess-content-result");
     assert.ok(row.querySelector(".ess-hit-title") && row.querySelector(".ess-hit-snippet"));
     assert.equal(row.title, "", "full content is available through disclosure rather than a tooltip");
     assert.equal(row.querySelector(".ess-path"), null, "a body hit contains only the note name and matching line");
     assert.equal(app.document.querySelector(".ess-page-label").textContent, "第 1 / 3 页");
     await view.load(2);
-    assert.equal(app.document.querySelectorAll(".ess-block").length, 1, "pages replace the list instead of accumulating waterfall rows");
-    assert.equal(app.document.querySelector(".ess-block").dataset.blockId, "hit-2");
+    assert.equal(app.document.querySelectorAll(".ess-content-result").length, 1, "pages replace the list instead of accumulating waterfall rows");
+    assert.equal(app.document.querySelector(".ess-content-result").dataset.blockId, "hit-2");
     assert.deepEqual(requestedPages.slice(-2), [{page: 2, size: 50, titles: true}, {page: 2, size: 50, titles: false}]);
     view.pageSizeSelect.value = "100";
     view.pageSizeSelect.dispatchEvent(new app.window.Event("change", {bubbles: true}));
@@ -106,7 +106,7 @@ test("global results highlight title and body text in a flat paged list, and bod
     assert.equal(view.pageLabel.textContent, "第 1 / 3 页");
     let opened;
     app.plugin.openResult = async (...args) => {opened = args;};
-    app.document.querySelector(".ess-block").click();
+    app.document.querySelector(".ess-content-result").click();
     await flush();
     assert.equal(opened[0], "note");
     assert.equal(opened[1].id, "hit-1");
@@ -128,6 +128,33 @@ test("global page size is saved and restored when the plugin is reopened", async
     assert.equal(reopened.plugin.searchView.pageSizeSelect.value, "200");
 });
 
+test("a note shows once and expands to its complete highlighted hits, each of which opens its exact match", async t => {
+    const app = await setup(t, {api: async (_url, body) => body.types.document ? {blocks: []} : {blocks: [
+        {id: "hit-one", rootID: "note", hPath: "/笔记/第一处", content: "第一处关键词，前后内容"},
+        {id: "hit-two", rootID: "note", hPath: "/笔记/第二处", content: "第二处关键词，也要能跳到"},
+    ], matchedBlockCount: 2, matchedRootCount: 1}});
+    app.plugin.openSearch();
+    const view = app.plugin.searchView;
+    view.input.value = "关键词";
+    await view.load();
+    assert.equal(view.results.querySelectorAll(".ess-content-result").length, 1, "one note gets one result row");
+    assert.match(view.status.textContent, /内容在 1 篇笔记中找到（共 2 条）/);
+    assert.doesNotMatch(view.status.textContent, /块/);
+    const row = view.results.querySelector(".ess-content-result");
+    const disclosure = row.parentElement.querySelector(".ess-expand");
+    disclosure.click();
+    const details = row.parentElement.querySelectorAll(".ess-hit-detail");
+    assert.equal(details.length, 2);
+    assert.equal(details[1].textContent, "第二处关键词，也要能跳到");
+    assert.equal(details[1].querySelector("mark").textContent, "关键词");
+    let opened;
+    app.plugin.openResult = async (...args) => {opened = args;};
+    details[1].click();
+    await flush();
+    assert.equal(opened[1].id, "hit-two");
+    assert.equal(opened[2], "关键词");
+});
+
 test("body results expand complete highlighted text without opening a note, and collapse again", async t => {
     const content = "前文".repeat(100) + "同学" + "后文".repeat(100) + "\n末行<script>不作为代码执行</script>";
     const escaped = content.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -136,7 +163,7 @@ test("body results expand complete highlighted text without opening a note, and 
     const view = app.plugin.searchView;
     view.input.value = "同学";
     await view.load();
-    const row = view.results.querySelector(".ess-block");
+    const row = view.results.querySelector(".ess-content-result");
     const item = row.parentElement;
     const expand = item.querySelector(".ess-expand");
     const full = item.querySelector(".ess-full-content");
@@ -149,7 +176,7 @@ test("body results expand complete highlighted text without opening a note, and 
     expand.click();
     assert.equal(full.hidden, false);
     assert.equal(expand.getAttribute("aria-expanded"), "true");
-    assert.equal(expand.getAttribute("aria-label"), "收起完整命中内容");
+    assert.equal(expand.getAttribute("aria-label"), "收起命中内容");
     assert.equal(app.tabs.length, 0, "expansion does not navigate away");
     assert.ok(app.plugin.dialog);
     expand.click();
@@ -181,7 +208,7 @@ test("clicking a global body result keeps search open and highlights and scrolls
     const view = app.plugin.searchView;
     view.input.value = "关键词";
     await view.load();
-    view.results.querySelector(".ess-block").click();
+    view.results.querySelector(".ess-content-result").click();
     await new Promise(resolve => setTimeout(resolve, 30));
     const current = app.window.CSS.highlights.get("ess-search-result-current");
     assert.equal(current.ranges[0].toString(), "关键词");
@@ -213,7 +240,7 @@ test("global result highlighting falls back to a noneditable overlay on older We
     app.plugin.openSearch();
     app.plugin.searchView.input.value = "词";
     await app.plugin.searchView.load();
-    app.plugin.searchView.results.querySelector(".ess-block").click();
+    app.plugin.searchView.results.querySelector(".ess-content-result").click();
     await new Promise(resolve => setTimeout(resolve, 30));
     assert.equal(app.document.querySelectorAll(".ess-result-mark").length, 2);
     assert.equal(app.document.querySelectorAll(".ess-result-mark-current").length, 1);
@@ -276,7 +303,7 @@ test("current-note find acts on text occurrences, seeds a selection, and follows
     assert.equal(find.input.value, "词", "Ctrl+F starts from selected note text");
     assert.equal(find.counter.textContent, "1 / 3", "the counter counts individual text matches rather than blocks");
     assert.deepEqual(Array.from(find.matches, match => match.block.id), ["earlier", "earlier", "later"]);
-    assert.equal(find.root.querySelector(".ess-block, .ess-group"), null, "the find widget has no block result list or groups");
+    assert.equal(find.root.querySelector(".ess-content-result, .ess-group"), null, "the current-note finder has no result list or groups");
     await find.go(1);
     assert.equal(find.counter.textContent, "2 / 3");
 });

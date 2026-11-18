@@ -23,8 +23,8 @@ class SearchView {
         const header = el("div", "ess-search-header");
         this.input = el("input", "b3-text-field ess-query");
         this.input.type = "search";
-        this.input.placeholder = "找笔记名称，或正文中的一句话…";
-        this.input.setAttribute("aria-label", "搜索笔记和内容");
+        this.input.placeholder = "想找什么？标题、正文都能搜…";
+        this.input.setAttribute("aria-label", "搜索笔记标题和内容");
         this.input.autocomplete = "off";
         this.input.enterKeyHint = "search";
         this.input.value = plugin.searchState.query;
@@ -65,7 +65,7 @@ class SearchView {
         this.nextPage.onclick = () => this.load(this.page + 1);
         this.pagination.append(this.pageSizeSelect, this.pageControls);
         this.pagination.hidden = true;
-        this.footer = el("div", "ess-footer", "回车或点“搜索”查找 · 正文结果定位并高亮文字");
+        this.footer = el("div", "ess-footer", "回车或点“搜索”开搜 · 点命中内容直达原文");
         this.root.append(header, this.status, this.results, this.pagination, this.footer);
         container.replaceChildren(this.root);
         this.input.oncompositionstart = () => {this.composing = true; clearTimeout(this.timer); this.controller?.abort(); this.version++;};
@@ -88,7 +88,7 @@ class SearchView {
         this.busy = true;
         this.updatePagination();
         this.selected = -1;
-        this.status.textContent = "正在查找…";
+        this.status.textContent = "正在翻笔记…";
         this.results.replaceChildren();
         this.timer = setTimeout(() => this.load(), 160);
     }
@@ -106,7 +106,7 @@ class SearchView {
         const query = this.input.value.trim();
         this.busy = true;
         this.updatePagination();
-        this.status.textContent = "正在查找…";
+        this.status.textContent = "正在翻笔记…";
         try {
             if (!query) {
                 this.renderRecent();
@@ -129,7 +129,7 @@ class SearchView {
             this.results.scrollTop = page === 1 && query === this.plugin.searchState.query ? this.plugin.searchState.scroll || 0 : 0;
         } catch (error) {
             if (signal.aborted || version !== this.version || this.destroyed) return;
-            this.status.textContent = "搜索失败：" + error.message;
+            this.status.textContent = "刚刚没搜成：" + error.message;
             this.results.replaceChildren();
             const retry = el("button", "b3-button b3-button--outline", "重试");
             retry.onclick = () => this.load(page);
@@ -146,7 +146,7 @@ class SearchView {
     renderRecent() {
         this.pagination.hidden = true;
         this.results.replaceChildren();
-        this.status.textContent = "输入后搜索标题和正文；正文命中单行显示。";
+        this.status.textContent = "输入关键词，我马上把笔记捞出来。";
         const heading = el("div", "ess-label", "最近打开");
         this.results.append(heading);
         const recent = this.plugin.recent || [];
@@ -155,28 +155,33 @@ class SearchView {
             row.onclick = event => this.open(item.id, null, event.ctrlKey || event.metaKey);
             this.results.append(row);
         }
-        if (!recent.length) this.results.append(el("p", "ess-empty", "从这里打开的笔记会保留在最近列表里。"));
+        if (!recent.length) this.results.append(el("p", "ess-empty", "还没有最近笔记，先搜一个试试？"));
         this.refreshButtons();
     }
 
     render() {
         this.results.replaceChildren();
-        const total = this.contentData?.matchedBlockCount || 0;
-        this.status.textContent = `标题 ${this.titleData?.matchedBlockCount || 0} 篇 · 正文 ${total} 块（${this.contentData?.matchedRootCount || 0} 篇）`;
+        const titleCount = this.titleData?.matchedBlockCount || 0;
+        const contentCount = this.contentData?.matchedBlockCount || 0;
+        const contentNoteCount = this.contentData?.matchedRootCount || 0;
+        this.status.textContent = `标题命中 ${titleCount} 篇 · 内容在 ${contentNoteCount} 篇笔记中找到（共 ${contentCount} 条）`;
         if (this.titles.length) {
-            this.results.append(el("div", "ess-label", "标题匹配"));
+            this.results.append(el("div", "ess-label", "笔记标题"));
             for (const title of this.titles) this.renderRow(title.id, title.content);
         }
         if (this.blocks.length) {
-            this.results.append(el("div", "ess-label", "正文匹配"));
+            this.results.append(el("div", "ess-label", "命中内容"));
+            const notes = new Map();
             for (const block of this.blocks) {
                 const rootID = block.rootID || block.root_id;
                 if (!rootID) continue;
                 const title = this.titles.find(item => item.id === rootID)?.content || block.hPath?.split("/").filter(Boolean).pop() || "未命名笔记";
-                this.renderRow(rootID, title, block);
+                if (!notes.has(rootID)) notes.set(rootID, {title, hits: []});
+                notes.get(rootID).hits.push(block);
             }
+            for (const [rootID, note] of notes) this.renderRow(rootID, note.title, note.hits[0], note.hits);
         }
-        if (!this.titles.length && !this.blocks.length) this.results.append(el("p", "ess-empty", "没有找到。试试更短的词，或去掉不确定的字。"));
+        if (!this.titles.length && !this.blocks.length) this.results.append(el("p", "ess-empty", "没找到？换个词试试，笔记可能藏得有点认真。"));
         this.pagination.hidden = false;
         this.refreshButtons();
     }
@@ -189,8 +194,8 @@ class SearchView {
         this.pageLabel.textContent = `第 ${this.page} / ${count} 页`;
     }
 
-    renderRow(rootID, title, block) {
-        const row = el("button", block ? "ess-result ess-block" : "ess-result ess-doc-title");
+    renderRow(rootID, title, block, hits = block ? [block] : []) {
+        const row = el("button", block ? "ess-result ess-content-result" : "ess-result ess-doc-title");
         row.type = "button";
         row.dataset.rootId = rootID;
         row.dataset.blockId = block?.id || rootID;
@@ -206,14 +211,25 @@ class SearchView {
         row.onclick = event => this.open(rootID, block, event.ctrlKey || event.metaKey, title);
         if (!block) {this.results.append(row); return;}
 
-        const item = el("div", "ess-block-item");
+        const item = el("div", "ess-content-item");
         const expand = el("button", "ess-expand", "⌄");
         expand.type = "button";
         expand.setAttribute("aria-expanded", "false");
-        expand.setAttribute("aria-label", "展开完整命中内容");
+        expand.setAttribute("aria-label", "展开这篇笔记的全部命中内容");
         const full = el("div", "ess-full-content");
         full.hidden = true;
-        this.highlight(full, block.content);
+        for (const hit of hits) {
+            const detail = el("button", "ess-hit-detail");
+            detail.type = "button";
+            detail.setAttribute("aria-label", `跳到“${title}”中的这处匹配`);
+            this.highlight(detail, hit.content);
+            detail.onclick = event => {
+                event.preventDefault();
+                event.stopPropagation();
+                void this.open(rootID, hit, event.ctrlKey || event.metaKey, title);
+            };
+            full.append(detail);
+        }
         expand.onclick = event => {
             event.preventDefault();
             event.stopPropagation();
@@ -221,7 +237,7 @@ class SearchView {
             full.hidden = !expanded;
             expand.textContent = expanded ? "⌃" : "⌄";
             expand.setAttribute("aria-expanded", String(expanded));
-            expand.setAttribute("aria-label", expanded ? "收起完整命中内容" : "展开完整命中内容");
+            expand.setAttribute("aria-label", expanded ? "收起命中内容" : `展开这篇笔记的 ${hits.length} 处命中`);
         };
         item.append(row, expand, full);
         this.results.append(item);
@@ -272,9 +288,9 @@ class SearchView {
         try {
             const result = await this.plugin.openResult(rootID, block, this.input.value.trim(), newTab, title);
             if (this.destroyed) return;
-            this.status.textContent = result?.highlighted ? `已定位到“${title || "搜索结果"}”中的匹配文字；可继续搜索。` : `已打开“${title || "搜索结果"}”；搜索窗口保持打开。`;
-            this.footer.textContent = "搜索窗口已缩至屏幕角落 · 修改关键词继续搜索 · 点击正文结果定位高亮文字";
-        } catch (error) {this.status.textContent = "打开失败：" + error.message;}
+            this.status.textContent = result?.highlighted ? `已跳到“${title || "搜索结果"}”的命中位置，继续搜吧。` : `已打开“${title || "搜索结果"}”，搜索窗还在，接着搜。`;
+            this.footer.textContent = "搜索窗缩到角落啦 · 改个关键词继续搜 · 点命中内容直达原文";
+        } catch (error) {this.status.textContent = "打开没成功：" + error.message;}
         finally {this.opening = false;}
     }
 
