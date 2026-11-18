@@ -1,8 +1,8 @@
 {
   "name": "siyuan-easy-search",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "private": true,
-  "description": "全局搜索命中定位与 VS Code 式篇内查找",
+  "description": "还你一个正常的搜索。标题正文一起搜，结果按篇展示，点中就到原文。",
   "scripts": {
     "build": "node scripts/build.cjs",
     "test": "node --test tests/*.test.cjs",
